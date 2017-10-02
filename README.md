@@ -12,3 +12,4 @@ Configs:
 - File encoding (default UTF8) for reading
 
 Of course you can tweak anything. Have fun!
+Also, feel free to contact me on reddit if you have any doubts ([/u/tyrellrummage](www.reddit.com/u/tyrellrummage)).
