@@ -7,7 +7,7 @@ const os = require('os');
 let debug = true;   // push messages to console, don't push to twitter
 
 let config = {
-    ispName: '',
+    ispName: ' ',
     twitterConsumerKey: '',
     twitterConsumerSecret: '',
     twitterAccessToken: '',
@@ -57,41 +57,31 @@ const checkDataFile = () => {
   }
 }
 
-// SET UP
-
-// check if the twitter configuration exists
-if ((config.twitterConsumerKey == '') || (config.twitterConsumerSecret == '') || (config.twitterAccessToken = '') || (config.twitterAccessTokenSecret == '')) {
-  // if it doesn't, check if the environment variables exist
-  if ((process.env.TWITTER_CONSUMER_KEY == undefined) || (process.env.TWITTER_CONSUMER_SECRET == undefined) || (process.env.TWITTER_ACCESS_TOKEN == undefined) || (process.env.TWITTER_ACCESS_TOKEN_SECRET == undefined)) {
-    log('> Configuration error: You have not filled in your Twitter configuration (and unable to find in environment.');
-    return false;
-  } else {
-    log('> Configuration found in environment.');
-    config.twitterConsumerKey = process.env.TWITTER_CONSUMER_KEY;
-    config.twitterConsumerSecret = process.env.TWITTER_CONSUMER_SECRET;
-    config.twitterAccessToken = process.env.TWITTER_ACCESS_TOKEN;
-    config.twitterAccessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
+const checkConfig = () => {
+  // check if the twitter configuration exists
+  if ((config.twitterConsumerKey == '') || (config.twitterConsumerSecret == '') || (config.twitterAccessToken = '') || (config.twitterAccessTokenSecret == '')) {
+    // if it doesn't, check if the environment variables exist
+    if ((process.env.TWITTER_CONSUMER_KEY == undefined) || (process.env.TWITTER_CONSUMER_SECRET == undefined) || (process.env.TWITTER_ACCESS_TOKEN == undefined) || (process.env.TWITTER_ACCESS_TOKEN_SECRET == undefined)) {
+      log('> Configuration error: You have not filled in your Twitter configuration (and unable to find in environment.');
+      process.exit(0);
+    } else {
+      log('> Configuration found in environment.');
+      config.twitterConsumerKey = process.env.TWITTER_CONSUMER_KEY;
+      config.twitterConsumerSecret = process.env.TWITTER_CONSUMER_SECRET;
+      config.twitterAccessToken = process.env.TWITTER_ACCESS_TOKEN;
+      config.twitterAccessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
+    }
   }
+
+  // check if isp is set
+  if (config.ispName == '') {
+    log('> Configuration error: You have not filled in your ISP detail.');
+    process.exit(0);
+  }
+
+  log(`> consumer_key: ${config.twitterConsumerKey}, consumer_secret: ${config.twitterConsumerSecret}, access_token: ${config.twitterAccessToken}, access_token_secret: ${config.twitterAccessTokenSecret}`);
 }
 
-// check if isp is set
-if (config.ispName == '') {
-  log('> Configuration error: You have not filled in your ISP detail.');
-  return false;
-}
-
-// check the data file consistency
-checkDataFile();
-
-log(`consumer_key: ${config.twitterConsumerKey}, consumer_secret: ${config.twitterConsumerSecret}, access_token: ${config.twitterAccessToken}, access_token_secret: ${config.twitterAccessToken_secret}`);
-
-const T = new Twit({
-	consumer_key: config.twitterConsumerKey,
-	consumer_secret: config.twitterConsumerSecret,
-	access_token: config.twitterAccessToken,
-	access_token_secret: config.twitterAccessTokenSecret,
-	timeout_ms: 15*1000
-});
 
 let counter = 0;  // loop counter
 
@@ -160,7 +150,24 @@ const loop = () => {
 	});
 }
 
-// INITIALIZE LOOP
+// RUN THE APP
 
+// check the data file consistency
+checkDataFile();
+
+// check the configuration
+checkConfig();
+
+// configure twitter
+const T = new Twit({
+	consumer_key: config.twitterConsumerKey,
+	consumer_secret: config.twitterConsumerSecret,
+	access_token: config.twitterAccessToken,
+	access_token_secret: config.twitterAccessTokenSecret,
+	timeout_ms: 15*1000
+});
+
+// loop!
 loop();
+
 setInterval(loop, 1000 * config.checkInterval);
