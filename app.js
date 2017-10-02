@@ -64,7 +64,9 @@ if ((config.consumer_key == '') || (config.consumer_secret == '') || (config.acc
     config.twitter_access_token = process.env.TWITTER_ACCESS_TOKEN;
     config.twitter_access_token_secret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
   }
-} else if (config.isp_name == '') {
+}
+
+if (config.isp_name == '') {
   log('> Configuration error: You have not filled in your ISP detail.');
   return false;
 }
