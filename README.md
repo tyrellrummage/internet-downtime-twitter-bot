@@ -14,4 +14,4 @@ Configs:
 Of course you can tweak anything. Have fun!
 Also, feel free to contact me on reddit if you have any doubts ([/u/tyrellrummage](https://www.reddit.com/u/tyrellrummage)).
 
-To run it, go the the same directory (folder) where you have it and run `node app.js`
+To run it, go the the same directory (folder) where you have it and run `node app.js` on your console.
