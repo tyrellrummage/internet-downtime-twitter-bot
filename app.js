@@ -7,7 +7,7 @@ const os = require('os');
 let debug = true;   // push messages to console, don't push to twitter
 
 let config = {
-    ispName: 'Exetel',
+    ispName: '',
     twitterConsumerKey: '',
     twitterConsumerSecret: '',
     twitterAccessToken: '',
