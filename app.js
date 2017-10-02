@@ -46,7 +46,7 @@ const secondsToReadableTime = timestamp => { let floor = Math.floor; return {hou
 const formatTimePiece = (piece, string) => { return piece > 1 ? `${string}s` : string;}
 
 const log = msg => { if(debug){ console.log(msg);}}
-const tweet = content => { T.post('statuses/update', {status: content}, function(err, data, response){ if(err) { console.log(err); return;} log('Tweet sent!');});}
+const tweet = content => { T.post('statuses/update', {status: content}, function(err, data, response){ if(err) { console.log(err); return;} console.log('Tweet sent!');});}
 
 const updateLogFile = msg => { let currentContent = fs.readFileSync(files.log, fileEncoding); currentContent += msg + os.EOL; fs.writeFileSync(files.log, currentContent);}
 
@@ -74,7 +74,7 @@ const loop = () => {
 			readableTime = secondsToReadableTime(deltaSeconds),
 			hours = readableTime.hours,
 			minutes = readableTime.minutes,
-			seconds = readableTime.seconds + 1,
+			seconds = readableTime.seconds,
 			outageCounter = getOutageCounter(),
 			timeString = '';
 
