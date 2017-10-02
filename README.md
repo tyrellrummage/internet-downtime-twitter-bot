@@ -1,10 +1,14 @@
 # internet-downtime-twitter-bot
 Twitter bot that sends a tweet everytime that your internet goes down.
 
-Configs:
+Configuration:
 
-- Twitter API keys (you can get them from Twitter Developer)
-- Debug (default = true), logs info into the console and tweets when true (for actually tweeting, set false)
+- isp_name: your isp name, just to name bash
+- twitter_consumer_key: your twitter consumer key, from https://apps.twitter.com/ - this can be set as an environment variable
+- twitter_consumer_secret: your twitter consumer secret, from https://apps.twitter.com/ - this can be set as an environment variable
+- twitter_access_token: your twitter access token, from https://apps.twitter.com/ - this can be set as an environment variable
+- twitter_access_token_secret: your twitter access token secret, from https://apps.twitter.com/ - this can be set as an environment variable
+- debug (default = true): logs info and tweets into the console (for actually tweeting, set false)
 - CheckInterval (depends on debug), time in seconds for the loop that checks connection interval
 - CheckTimeout (depends on debug), time in seconds to wait before returning that internet's down
 
