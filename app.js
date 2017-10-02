@@ -3,22 +3,19 @@ const fs = require('fs');
 const Twit = require('twit');
 const os = require('os');
 
-//CONFIG VARIABLES
+// YOUR CONFIGURATION
+let debug = true;   // push messages to console, don't push to twitter
 
-const T = new Twit({
-	consumer_key: '',
-	consumer_secret: '',
-	access_token: '',
-	access_token_secret: '',
-	timeout_ms: 15*1000
-});
+let config = {
+    isp_name: '',
+    twitter_consumer_key: '',
+    twitter_consumer_secret: '',
+    twitter_access_token: '',
+    twitter_access_token_secret: '',
+    checkInterval: (debug ? 5 : 20),
+    checkTimeout: (debug ? 3 : 5),
+};
 
-let counter = 0;
-let debug = true;
-let checkInterval = debug ? 5 : 20;
-let checkTimeout = debug ? 3 : 5;
-
-let ISPName = '';
 
 let files = {
 	lastStatus: 'last-status.txt',
@@ -27,10 +24,11 @@ let files = {
 	log: 'log.txt'
 }
 
+// SYSTEM CONFIGURATION
 let fileEncoding = 'utf8';
 
-//HELPERS
 
+//HELPERS
 const getLastStatus = () => { return fs.readFileSync(files.lastStatus, fileEncoding);}
 const setLastStatus = msg => { fs.writeFileSync(files.lastStatus, msg);}
 
@@ -50,14 +48,47 @@ const tweet = content => { T.post('statuses/update', {status: content}, function
 
 const updateLogFile = msg => { let currentContent = fs.readFileSync(files.log, fileEncoding); currentContent += msg + os.EOL; fs.writeFileSync(files.log, currentContent);}
 
-//LOOP
+
+// SET UP
+
+// check if the twitter configuration exists
+if ((config.consumer_key == '') || (config.consumer_secret == '') || (config.access_token = '') || (config.access_token_secret == '')) {
+  // if it doesn't, check if the environment variables exist
+  if ((process.env.TWITTER_CONSUMER_KEY == undefined) || (process.env.TWITTER_CONSUMER_SECRET == undefined) || (process.env.TWITTER_ACCESS_TOKEN == undefined) || (process.env.TWITTER_ACCESS_TOKEN_SECRET == undefined)) {
+    log('> Configuration error: You have not filled in your Twitter configuration (and unable to find in environment.');
+    return false;
+  } else {
+    log('> Configuration found in environment.');
+    config.twitter_consumer_key = process.env.TWITTER_CONSUMER_KEY;
+    config.twitter_consumer_secret = process.env.TWITTER_CONSUMER_SECRET;
+    config.twitter_access_token = process.env.TWITTER_ACCESS_TOKEN;
+    config.twitter_access_token_secret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
+  }
+}
+
+if (config.isp_name == '') {
+  log('> Configuration error: You have not filled in your ISP detail.');
+  return false;
+}
+
+log(`consumer_key: ${config.twitter_consumer_key}, consumer_secret: ${config.twitter_consumer_secret}, access_token: ${config.twitter_access_token}, access_token_secret: ${config.twitter_access_token_secret}`);
+const T = new Twit({
+	consumer_key: config.twitter_consumer_key,
+	consumer_secret: config.twitter_consumer_secret,
+	access_token: config.twitter_access_token,
+	access_token_secret: config.twitter_access_token_secret,
+	timeout_ms: 15*1000
+});
+
+let counter = 0;  // loop counter
+// LOOP
 
 const loop = () => {
 	log(`Loop iteration Nº ${counter}`);
 	counter++;
 
 	ia({
-		timeout: checkTimeout * 1000
+		timeout: config.checkTimeout * 1000
 	}).then(function(){
 		log('Now online');
 		let ls = getLastStatus();
@@ -91,7 +122,7 @@ const loop = () => {
 		let readableTimeLastOutage = timestampToReadableTime(lastOutageTimestamp),
 			readableTimeNow = timestampToReadableTime(now);
 
-		let tweetContent = `#${ISPName}'s Internet just went down for ${timeString}. From ${readableTimeLastOutage} to ${readableTimeNow}. It's the ${outageCounter}º time.`,
+		let tweetContent = `#${config.isp_name}'s Internet just went down for ${timeString}. From ${readableTimeLastOutage} to ${readableTimeNow}. It's the ${outageCounter}º time.`,
 			logContent = `Internet Connection Failure. Downtime: ${paddedHours}:${paddedMinutes}:${paddedSeconds}. From ${readableTimeLastOutage} to ${readableTimeNow}. Connection failure Nº ${outageCounter}.`;
 
 		updateLogFile(logContent);
@@ -118,4 +149,4 @@ const loop = () => {
 // INITIALIZE LOOP
 
 loop();
-setInterval(loop, 1000 * checkInterval);
+setInterval(loop, 1000 * config.checkInterval);
