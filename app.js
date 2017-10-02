@@ -7,36 +7,30 @@ const os = require('os');
 let debug = true;   // push messages to console, don't push to twitter
 
 let config = {
-    isp_name: '',
-    twitter_consumer_key: '',
-    twitter_consumer_secret: '',
-    twitter_access_token: '',
-    twitter_access_token_secret: '',
+    ispName: ' ',
+    twitterConsumerKey: '',
+    twitterConsumerSecret: '',
+    twitterAccessToken: '',
+    twitterAccessTokenSecret: '',
+    dataFile: 'data.dat',
+    logFile: 'log.txt',
     checkInterval: (debug ? 5 : 20),
     checkTimeout: (debug ? 3 : 5),
 };
 
-
-let files = {
-	lastStatus: 'last-status.txt',
-	outageCounter: 'outage-counter.txt',
-	timestamp: 'timestamp.txt',
-	log: 'log.txt'
-}
-
 // SYSTEM CONFIGURATION
-let fileEncoding = 'utf8';
+const fileEncoding = 'utf8';
 
 
 //HELPERS
-const getLastStatus = () => { return fs.readFileSync(files.lastStatus, fileEncoding);}
-const setLastStatus = msg => { fs.writeFileSync(files.lastStatus, msg);}
+const getLastStatus = () => { return fs.readFileSync(config.dataFile, fileEncoding).split(',')[2];}
+const setLastStatus = msg => { fs.writeFileSync(config.dataFile, getOutageCounter() + ',' + getTimestamp() + ',' + msg);}
 
-const getTimetsamp = () => { return parseInt(fs.readFileSync(files.timestamp, fileEncoding));}
-const setTimestamp = () => { fs.writeFileSync(files.timestamp, new Date().getTime());}
+const getTimestamp = () => { return parseInt(fs.readFileSync(config.dataFile, fileEncoding)).split(',')[1];}
+const setTimestamp = () => { fs.writeFileSync(config.dataFile, getOutageCounter() + ',' + new Date().getTime() + ',' + getLastStatus());}
 
-const increaseOutageCounter = () => { let n = parseInt(getOutageCounter()) + 1; fs.writeFileSync(files.outageCounter, n);}
-const getOutageCounter = () => { return fs.readFileSync(files.outageCounter, fileEncoding);}
+const increaseOutageCounter = () => { let n = parseInt(getOutageCounter()) + 1; fs.writeFileSync(config.dataFile, n + ',' + getTimestamp() + ',' + getLastStatus());}
+const getOutageCounter = () => { return fs.readFileSync(config.dataFile, fileEncoding).split(',')[0];}
 
 const timestampToReadableTime = timestamp => { let date = new Date(timestamp); let hours = padNumber(date.getHours()); let minutes = padNumber(date.getMinutes()); let seconds = padNumber(date.getSeconds()); return `${hours}:${minutes}:${seconds}`;}
 const padNumber = n => { return (n < 10) ? `0${n}` : n;}
@@ -46,41 +40,51 @@ const formatTimePiece = (piece, string) => { return piece > 1 ? `${string}s` : s
 const log = msg => { if(debug){ console.log(msg);}}
 const tweet = content => { T.post('statuses/update', {status: content}, function(err, data, response){ if(err) { console.log(err); return;} console.log('Tweet sent!');});}
 
-const updateLogFile = msg => { let currentContent = fs.readFileSync(files.log, fileEncoding); currentContent += msg + os.EOL; fs.writeFileSync(files.log, currentContent);}
+const updateLogFile = msg => { let currentContent = fs.readFileSync(config.logFile, fileEncoding); currentContent += msg + os.EOL; fs.writeFileSync(config.logFile, currentContent);}
 
-
-// SET UP
-
-// check if the twitter configuration exists
-if ((config.consumer_key == '') || (config.consumer_secret == '') || (config.access_token = '') || (config.access_token_secret == '')) {
-  // if it doesn't, check if the environment variables exist
-  if ((process.env.TWITTER_CONSUMER_KEY == undefined) || (process.env.TWITTER_CONSUMER_SECRET == undefined) || (process.env.TWITTER_ACCESS_TOKEN == undefined) || (process.env.TWITTER_ACCESS_TOKEN_SECRET == undefined)) {
-    log('> Configuration error: You have not filled in your Twitter configuration (and unable to find in environment.');
-    return false;
-  } else {
-    log('> Configuration found in environment.');
-    config.twitter_consumer_key = process.env.TWITTER_CONSUMER_KEY;
-    config.twitter_consumer_secret = process.env.TWITTER_CONSUMER_SECRET;
-    config.twitter_access_token = process.env.TWITTER_ACCESS_TOKEN;
-    config.twitter_access_token_secret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
+const checkDataFile = () => {
+  // check if data file exists, create if it doesn't
+  if (!fs.existsSync(config.dataFile)) {
+    log('> Data file not found, creating blank.')
+    fs.writeFileSync(config.dataFile, '0,0,online');
+  }
+  
+  // check if the data file is corrupt
+  let read = fs.readFileSync(config.dataFile, fileEncoding).split(',');
+  if (read.length != 3) {
+    log('> Data file corrupt, creating blank.');
+    fs.writeFileSync(config.dataFile, '0,0,online');
   }
 }
 
-if (config.isp_name == '') {
-  log('> Configuration error: You have not filled in your ISP detail.');
-  return false;
+const checkConfig = () => {
+  // check if the twitter configuration exists
+  if ((config.twitterConsumerKey == '') || (config.twitterConsumerSecret == '') || (config.twitterAccessToken = '') || (config.twitterAccessTokenSecret == '')) {
+    // if it doesn't, check if the environment variables exist
+    if ((process.env.TWITTER_CONSUMER_KEY == undefined) || (process.env.TWITTER_CONSUMER_SECRET == undefined) || (process.env.TWITTER_ACCESS_TOKEN == undefined) || (process.env.TWITTER_ACCESS_TOKEN_SECRET == undefined)) {
+      log('> Configuration error: You have not filled in your Twitter configuration (and unable to find in environment.');
+      process.exit(0);
+    } else {
+      log('> Configuration found in environment.');
+      config.twitterConsumerKey = process.env.TWITTER_CONSUMER_KEY;
+      config.twitterConsumerSecret = process.env.TWITTER_CONSUMER_SECRET;
+      config.twitterAccessToken = process.env.TWITTER_ACCESS_TOKEN;
+      config.twitterAccessTokenSecret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
+    }
+  }
+
+  // check if isp is set
+  if (config.ispName == '') {
+    log('> Configuration error: You have not filled in your ISP detail.');
+    process.exit(0);
+  }
+
+  log(`> consumer_key: ${config.twitterConsumerKey}, consumer_secret: ${config.twitterConsumerSecret}, access_token: ${config.twitterAccessToken}, access_token_secret: ${config.twitterAccessTokenSecret}`);
 }
 
-log(`consumer_key: ${config.twitter_consumer_key}, consumer_secret: ${config.twitter_consumer_secret}, access_token: ${config.twitter_access_token}, access_token_secret: ${config.twitter_access_token_secret}`);
-const T = new Twit({
-	consumer_key: config.twitter_consumer_key,
-	consumer_secret: config.twitter_consumer_secret,
-	access_token: config.twitter_access_token,
-	access_token_secret: config.twitter_access_token_secret,
-	timeout_ms: 15*1000
-});
 
 let counter = 0;  // loop counter
+
 // LOOP
 
 const loop = () => {
@@ -99,7 +103,7 @@ const loop = () => {
 
 		log('Internet\'s back');
 
-		let lastOutageTimestamp = getTimetsamp(),
+		let lastOutageTimestamp = getTimestamp(),
 			now = new Date().getTime(),
 			deltaSeconds = (now - lastOutageTimestamp)/1000,
 			readableTime = secondsToReadableTime(deltaSeconds),
@@ -122,7 +126,7 @@ const loop = () => {
 		let readableTimeLastOutage = timestampToReadableTime(lastOutageTimestamp),
 			readableTimeNow = timestampToReadableTime(now);
 
-		let tweetContent = `#${config.isp_name}'s Internet just went down for ${timeString}. From ${readableTimeLastOutage} to ${readableTimeNow}. It's the ${outageCounter}º time.`,
+		let tweetContent = `#${config.ispName}'s Internet just went down for ${timeString}. From ${readableTimeLastOutage} to ${readableTimeNow}. It's the ${outageCounter}º time.`,
 			logContent = `Internet Connection Failure. Downtime: ${paddedHours}:${paddedMinutes}:${paddedSeconds}. From ${readableTimeLastOutage} to ${readableTimeNow}. Connection failure Nº ${outageCounter}.`;
 
 		updateLogFile(logContent);
@@ -146,7 +150,24 @@ const loop = () => {
 	});
 }
 
-// INITIALIZE LOOP
+// RUN THE APP
 
+// check the data file consistency
+checkDataFile();
+
+// check the configuration
+checkConfig();
+
+// configure twitter
+const T = new Twit({
+	consumer_key: config.twitterConsumerKey,
+	consumer_secret: config.twitterConsumerSecret,
+	access_token: config.twitterAccessToken,
+	access_token_secret: config.twitterAccessTokenSecret,
+	timeout_ms: 15*1000
+});
+
+// loop!
 loop();
+
 setInterval(loop, 1000 * config.checkInterval);
