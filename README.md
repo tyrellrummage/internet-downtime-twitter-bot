@@ -4,7 +4,7 @@ Twitter bot that sends a tweet everytime that your internet goes down.
 Configs:
 
 - Twitter API keys (you can get them from Twitter Developer)
-- Debug (default = true), logs info into the console and tweets when true
+- Debug (default = true), logs info into the console and tweets when true (for actually tweeting, set false)
 - CheckInterval (depends on debug), time in seconds for the loop that checks connection interval
 - CheckTimeout (depends on debug), time in seconds to wait before returning that internet's down
 
@@ -13,3 +13,5 @@ Configs:
 
 Of course you can tweak anything. Have fun!
 Also, feel free to contact me on reddit if you have any doubts ([/u/tyrellrummage](https://www.reddit.com/u/tyrellrummage)).
+
+To run it, go the the same directory (folder) where you have it and run `node app.js`
