@@ -9,8 +9,8 @@ Configuration:
 - twitterAccessToken: your twitter access token, from https://apps.twitter.com/ - this can be set as an environment variable
 - twitterAccessTokenSecret: your twitter access token secret, from https://apps.twitter.com/ - this can be set as an environment variable
 - debug (default = true): logs info and tweets into the console (for actually tweeting, set false)
-- checkInterval (depends on debug), time in seconds for the loop that checks connection interval
-- checkTimeout (depends on debug), time in seconds to wait before returning that internet's down
+- checkInterval (depends on debug): time in seconds for the loop that checks connection interval
+- checkTimeout (depends on debug): time in seconds to wait before returning that internet's down
 - fileEncoding (default UTF8): for reading/writing data to files
 
 Of course you can tweak anything. Have fun!
